@@ -177,17 +177,21 @@ int iterate_core(RISCVMachine *m, int hartid) {
 
         if(tracing_enabled)
         {
-            // See if the instruction changed control flow.  Assumes 1 hart
-            if(m->cpu_state[0]->info != ctf_nop) {
-                stf_writer << stf::InstPCTargetRecord(virt_machine_get_pc(m, 0));
-            }
+            // Only trace in user priv
+            if(priv == 0)
+            {
+                // See if the instruction changed control flow.  Assumes 1 hart
+                if(m->cpu_state[0]->info != ctf_nop) {
+                    stf_writer << stf::InstPCTargetRecord(virt_machine_get_pc(m, 0));
+                }
 
-            // Record the instruction trace record
-            if((insn_raw & 0x3) == 0x3) {
-                stf_writer << stf::InstOpcode32Record(insn_raw);
-            }
-            else {
-                stf_writer << stf::InstOpcode16Record(insn_raw);
+                // Record the instruction trace record
+                if((insn_raw & 0x3) == 0x3) {
+                    stf_writer << stf::InstOpcode32Record(insn_raw);
+                }
+                else {
+                    stf_writer << stf::InstOpcode16Record(insn_raw);
+                }
             }
         }
         return keep_going;
