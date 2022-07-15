@@ -559,6 +559,7 @@ static void usage(const char *prog, const char *msg) {
             "       --maxinsns terminates execution after a number of instructions\n"
             "       --terminate-event name of the validate event to terminate execution\n"
             "       --trace start trace dump after a number of instructions. Trace disabled by default\n"
+            "       --stf_trace <filename>  Dump an STF trace to the given file\n"
             "       --ignore_sbi_shutdown continue simulation even upon seeing the SBI_SHUTDOWN call\n"
             "       --dump_memories dump memories that could be used to load a cosimulation\n"
             "       --memory_size sets the memory size in MiB (default 256 MiB)\n"
@@ -617,6 +618,7 @@ RISCVMachine *virt_machine_main(int argc, char **argv) {
     long        ncpus                    = 0;
     uint64_t    maxinsns                 = 0;
     uint64_t    trace                    = UINT64_MAX;
+    const char *stf_trace                = nullptr;
     long        memory_size_override     = 0;
     uint64_t    memory_addr_override     = 0;
     bool        ignore_sbi_shutdown      = false;
@@ -637,7 +639,7 @@ RISCVMachine *virt_machine_main(int argc, char **argv) {
 #endif
 
     dromajo_stdout = stdout;
-    dromajo_stderr = stderr;
+    dromajo_stderr = stdout;
 
     optind = 0;
 
@@ -651,6 +653,7 @@ RISCVMachine *virt_machine_main(int argc, char **argv) {
             {"save",                    required_argument, 0,  's' },
             {"simpoint",                required_argument, 0,  'S' },
             {"maxinsns",                required_argument, 0,  'm' }, // CFG
+            {"stf_trace",               required_argument, 0,  'z' },
             {"trace   ",                required_argument, 0,  't' },
             {"ignore_sbi_shutdown",     required_argument, 0,  'P' }, // CFG
             {"dump_memories",                 no_argument, 0,  'D' }, // CFG
@@ -725,6 +728,10 @@ RISCVMachine *virt_machine_main(int argc, char **argv) {
                 if (trace != UINT64_MAX)
                     usage(prog, "already had a trace set");
                 trace = (uint64_t)atoll(optarg);
+                break;
+
+            case 'z':
+                stf_trace = strdup(optarg);
                 break;
 
             case 'P': ignore_sbi_shutdown = true; break;
@@ -1028,6 +1035,7 @@ RISCVMachine *virt_machine_main(int argc, char **argv) {
 
     s->common.snapshot_save_name = snapshot_save_name;
     s->common.trace              = trace;
+    s->common.stf_trace          = stf_trace;
 
     // Allow the command option argument to overwrite the value
     // specified in the configuration file

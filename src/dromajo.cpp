@@ -46,6 +46,11 @@
 #include "dromajo_cosim.h"
 #endif
 
+
+#include "trace_markers.h"
+#include "stf-inc/stf_writer.hpp"
+#include "stf-inc/stf_record_types.hpp"
+
 #ifdef SIMPOINT_BB
 FILE *simpoint_bb_file = nullptr;
 int   simpoint_roi     = 0;  // start without ROI enabled
@@ -121,6 +126,12 @@ int simpoint_step(RISCVMachine *m, int hartid) {
 }
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
+// STF Writing
+stf::STFWriter stf_writer;
+bool tracing_enabled = false;
+////////////////////////////////////////////////////////////////////////////////
+
 int iterate_core(RISCVMachine *m, int hartid) {
     if (m->common.maxinsns-- <= 0)
         /* Succeed after N instructions without failure. */
@@ -138,6 +149,49 @@ int iterate_core(RISCVMachine *m, int hartid) {
     int keep_going = virt_machine_run(m, hartid);
     if (last_pc == virt_machine_get_pc(m, hartid))
         return 0;
+
+    if(m->common.stf_trace) {
+        // check for start trace marker
+        if(insn_raw == START_TRACE_OPC)
+        {
+            tracing_enabled = true;
+            if((bool)stf_writer == false) {
+                stf_writer.open(m->common.stf_trace);
+                stf_writer.
+                    addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_GEN_GEM5, 1, 1, 0,
+                                                      "Trace actually from Dromajo"));
+                stf_writer.setISA(stf::ISA::RISCV);
+                stf_writer.setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV64);
+                stf_writer.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_RV64);
+                stf_writer.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_PHYSICAL_ADDRESS);
+                stf_writer.setHeaderPC(virt_machine_get_pc(m, 0));
+                stf_writer.finalizeHeader();
+            }
+
+            return keep_going;
+        }
+        else if (insn_raw == STOP_TRACE_OPC) {
+            tracing_enabled = false;
+            stf_writer.close();
+        }
+
+        if(tracing_enabled)
+        {
+            // See if the instruction changed control flow.  Assumes 1 hart
+            if(m->cpu_state[0]->info != ctf_nop) {
+                stf_writer << stf::InstPCTargetRecord(virt_machine_get_pc(m, 0));
+            }
+
+            // Record the instruction trace record
+            if((insn_raw & 0x3) == 0x3) {
+                stf_writer << stf::InstOpcode32Record(insn_raw);
+            }
+            else {
+                stf_writer << stf::InstOpcode16Record(insn_raw);
+            }
+        }
+        return keep_going;
+    }
 
     if (m->common.trace) {
         --m->common.trace;

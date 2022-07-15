@@ -57,3 +57,20 @@ usage: ./dromajo [--load snapshot_name] [--save snapshot_name] [--maxinsns N] [-
 ./dromajo path/to/your/coremark.riscv
 ...
 ```
+
+## Building with stf_lib
+
+Clone `stf_lib` at the root level of `dromajo`
+```
+git clone https://github.com/sparcians/stf_lib.git
+```
+
+Build the STF library.  Follow the directions in the README.md of stf
+library for library depedencies.
+```
+cd stf_lib
+mkdir build; cd build
+# Disable LTO -- dromajo build system isn't set up for that
+cmake ..  -DCMAKE_BUILD_TYPE=Release -DNO_STF_LTO=1
+make -j
+```

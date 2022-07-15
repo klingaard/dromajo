@@ -412,8 +412,9 @@ static void plic_set_irq(void *opaque, int irq_num, int state) {
     }
 }
 
-static uint8_t *get_ram_ptr(RISCVMachine *s, uint64_t paddr) {
+static uint8_t *get_ram_ptr(RISCVMachine *s, uint64_t paddr, size_t size = 0) {
     PhysMemoryRange *pr = get_phys_mem_range(s->mem_map, paddr);
+    assert(size < pr->size);
     if (!pr || !pr->is_ram)
         return NULL;
     return pr->phys_mem + (uintptr_t)(paddr - pr->addr);
@@ -889,7 +890,7 @@ static void load_elf_image(RISCVMachine *s, const uint8_t *image, size_t image_l
                    can't fix this without a substantial rewrite as the handling of IO devices
                    depends on this. */
                 cpu_register_ram(s->mem_map, ph->p_vaddr, rounded_size, 0);
-            memcpy(get_ram_ptr(s, ph->p_vaddr), image + ph->p_offset, ph->p_filesz);
+            memcpy(get_ram_ptr(s, ph->p_vaddr, ph->p_filesz), image + ph->p_offset, ph->p_filesz);
         }
 }
 

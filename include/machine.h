@@ -205,6 +205,7 @@ typedef struct VirtMachine {
     char *   terminate_event;
     uint64_t maxinsns;
     uint64_t trace;
+    const char * stf_trace = nullptr;
 
     /* For co-simulation only, they are -1 if nothing is pending. */
     bool cosim;
