@@ -153,6 +153,9 @@ static inline void track_write(RISCVCPUState *s, uint64_t vaddr, uint64_t paddr,
 #endif
     //printf("track.st[%llx:%llx]=%llx\n", paddr, paddr+size-1, data);
     s->last_data_paddr = paddr;
+    s->last_data_vaddr = vaddr;
+    s->last_data_size  = size;
+    s->last_data_type  = 1;
 #ifdef GOLDMEM_INORDER
     s->last_data_value = data;
 #endif
@@ -163,6 +166,9 @@ static inline uint64_t track_dread(RISCVCPUState *s, uint64_t vaddr, uint64_t pa
     s->machine->llc->read(paddr);
 #endif
     s->last_data_paddr = paddr;
+    s->last_data_vaddr = vaddr;
+    s->last_data_size  = size;
+    s->last_data_type  = 0;
     //printf("track.ld[%llx:%llx]=%llx\n", paddr, paddr+size-1, data);
 
     return data;

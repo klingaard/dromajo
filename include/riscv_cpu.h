@@ -170,6 +170,9 @@ typedef struct RISCVCPUState {
     int          most_recently_written_reg;
 
     target_ulong last_data_paddr;
+    target_ulong last_data_vaddr = -1;
+    target_ulong last_data_size  = -1;
+    target_ulong last_data_type  = -1; // 0 == read, 1 == write
 #ifdef GOLDMEM_INORDER
     target_ulong last_data_value;
 #endif
