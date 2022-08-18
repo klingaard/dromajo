@@ -164,6 +164,7 @@ int iterate_core(RISCVMachine *m, int hartid) {
                     addTraceInfo(stf::TraceInfoRecord(stf::STF_GEN::STF_GEN_GEM5, 1, 1, 0,
                                                       "Trace actually from Dromajo"));
                 stf_writer.setISA(stf::ISA::RISCV);
+                stf_writer.setVLen(64);
                 stf_writer.setHeaderIEM(stf::INST_IEM::STF_INST_IEM_RV64);
                 stf_writer.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_RV64);
                 stf_writer.setTraceFeature(stf::TRACE_FEATURES::STF_CONTAIN_PHYSICAL_ADDRESS);
